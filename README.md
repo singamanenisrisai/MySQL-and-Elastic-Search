@@ -1,4 +1,4 @@
-# MySQL-and-Elastic-Search
+# Comparision Between MySQL-and-Elastic-Search
 ### This repository is a comparision of execution time and complexity between MySQL and Elastic Search.
 #### Four different scenarios of data has been made and Queries are performed for each scenario and captured the response time for both MySQL and ElasticSearch.
 #### According to our queries and response time which we obtained, we observed that ElasticSearch runs faster on more complex dataset.
