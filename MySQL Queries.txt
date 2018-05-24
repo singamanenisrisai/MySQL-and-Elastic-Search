@@ -1,0 +1,42 @@
+1)  Find all buses for a particular Bus Stop
+	Input: Bus Stop Name
+	Output: List of all buses, response time for the search query
+
+Sol:
+SELECT busDB.BUS_TRIPS.BUS_TRIP_HEADSIGN AS LIST_OF_ALL_BUSES FROM BUS_TRIPS
+WHERE busDB.BUS_TRIPS.TRIP_ID IN (SELECT TRIP_ID FROM BUS_STOP_TIMES
+WHERE BUS_STOP_ID = (SELECT BUS_STOP_ID FROM BUS_STOPS
+WHERE BUS_STOP_NAME='south Park St [southbound] after Spring Garden Rd '));
+
+2) Find buses between two time ranges
+	Input: Time Range 1 (hh:mm:ss), Time Range 2 (hh:mm:ss)
+	Output: List of all buses, response time for the search query
+
+Sol:
+SELECT DISTINCT busDB.BUS_TRIPS.BUS_TRIP_HEADSIGN AS BUS_BETWEEN_TIMES FROM BUS_TRIPS
+JOIN BUS_STOP_TIMES ON busDB.BUS_TRIPS.TRIP_ID = busDB.BUS_STOP_TIMES.TRIP_ID
+WHERE BUS_ARRIVAL_TIME BETWEEN '00:00:00' AND '07:00:00';
+
+3) Find route information of a particular bus on a particular route
+	Input: Bus Name, Route Name
+	Output: List of all routes, response time for the search query
+
+Sol:
+SELECT SP.BUS_STOP_SEQUENCE, BS.BUS_STOP_NAME, SP.BUS_ROUTE_ID, SP.BUS_TRIP_HEADSIGN, SP.TRIP_ID, SP.BUS_ARRIVAL_TIME, SP.BUS_DEPARTURE_TIME
+FROM BUS_STOPS BS,
+(SELECT BST.BUS_STOP_SEQUENCE, BST.BUS_STOP_ID, TR.BUS_ROUTE_ID, TR.BUS_TRIP_HEADSIGN, BST.TRIP_ID, BST.BUS_ARRIVAL_TIME, BST.BUS_DEPARTURE_TIME
+FROM BUS_STOP_TIMES BST,
+(SELECT BT.TRIP_ID, BT.BUS_TRIP_HEADSIGN, BT.BUS_ROUTE_ID FROM BUS_TRIPS BT
+WHERE BT.BUS_TRIP_HEADSIGN = '1 SPRING GARDEN TO MUMFORD' AND BT.BUS_ROUTE_ID='1-114') TR
+WHERE BST.TRIP_ID = TR.TRIP_ID
+ORDER BY BST.BUS_STOP_SEQUENCE) SP
+WHERE BS.BUS_STOP_ID = SP.BUS_STOP_ID;
+
+4) Find top 3 bus stops that are the busiest throughout the day in terms ofbus routes. 	
+	Input: None
+	Output: List of Bus Name, response time for the search query 
+
+Sol:
+SELECT BS.BUS_STOP_NAME, BS.BUS_STOP_ID, MF.MOST_FREQUENT FROM BUS_STOPS BS,
+(SELECT BST.BUS_STOP_ID, COUNT(BUS_STOP_ID) AS "MOST_FREQUENT" FROM BUS_STOP_TIMES BST
+GROUP BY BST.BUS_STOP_ID ORDER BY COUNT(BUS_STOP_ID) DESC LIMIT 3) MF WHERE BS.BUS_STOP_ID = MF.BUS_STOP_ID;

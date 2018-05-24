@@ -1,0 +1,184 @@
+1)
+Condition:
+Find all buses for a particular Bus Stop
+Input: Bus Stop Name
+Output: List of all buses, response time for the search query
+
+Answer:
+
+a) First find the stop_id from bus_stops table using name_stop as input.
+URL :
+http://ec2-35-183-29-29.ca-central-1.compute.amazonaws.com:9200/bus_stops/_search
+
+Query:
+
+{
+	"_source" : ["name_stop", "stop_id"],
+    "query": {
+        "match_phrase": {"name_stop": "south Park St [southbound] after Spring Garden Rd"}
+    }
+}
+
+b) In the second query using the stop_id from the above query we will obtain trip_id from bus_stoptimes table.
+URL : 
+http://ec2-35-183-29-29.ca-central-1.compute.amazonaws.com:9200/bus_stoptimes/_search
+
+Query:
+
+{
+	"_source" : ["trip_id", "stop_id"],
+    "query": {
+        "match_phrase": {"stop_id": "8308"}
+    }
+}
+
+c) With the trip_id we will find the trip_headsign from bus_trips table.
+URL:
+http://ec2-35-183-29-29.ca-central-1.compute.amazonaws.com:9200/bus_trips/_search
+
+Query:
+
+{
+	"_source" : ["trip_id", "trip_headsign"],
+    "query": {
+        "match_phrase": {"trip_id": "6518105-2012_05M-1205BRsu-Sunday-02"}
+    }
+}
+
+Total time taken : 6, 9, 31 milli seconds
+
+2)
+Condition:
+Find buses between two time ranges
+Input: Time Range 1 (hh:mm:ss), Time Range 2 (hh:mm:ss)
+Output: List of all buses, response time for the search query
+
+Answer:
+
+a) First find all the trip_id's in the range of given arrival time from bus_stoptimes table. 
+URL:
+http://ec2-35-183-29-29.ca-central-1.compute.amazonaws.com:9200/bus_stoptimes/_search
+
+Query:
+
+{
+	"_source" : ["trip_id", "arrival_time"],
+    "query": {
+        "range": {"arrival_time": {
+        	"gte": "13:00:00",
+        	"lte": "20:57:00"
+        }
+        	
+        }
+    }
+}
+
+b) According to that trip_id's find trip_headsign from bus_trips table.
+URL:
+http://ec2-35-183-29-29.ca-central-1.compute.amazonaws.com:9200/bus_trips/_search
+
+Query:
+
+{
+	"_source" : ["trip_id", "trip_headsign"],
+    "query": {
+        "match_phrase": {"trip_id": "6529824-2012_08A-1208BRsu-Sunday-01"}
+    }
+}
+Time taken: 97, 11 milli seconds
+
+3)
+Condition:
+Find route information of a particular bus on a particular route
+Input: Bus Name, Route Name
+Output: List of all routes, response time for the search query
+
+Answer:
+a) First find all the trip_id's which are common for given trip_headsign and route_id from bus_trips table.
+URL:
+http://ec2-35-183-29-29.ca-central-1.compute.amazonaws.com:9200/bus_trips/_search
+
+Query:
+
+{
+	"_source" : ["trip_id", "trip_headsign"],
+    "query": {
+    	"bool": {
+ 		"should":[
+    			{"match": {"trip_headsign": "7 GOTTINGEN"}},
+    
+    			{"match": {"route_id": "7-121"}}]
+    	}
+  
+    }
+}
+
+b) Then match obtained trip_id with stop_id from bus_stoptimes table.
+URL:
+http://ec2-35-183-29-29.ca-central-1.compute.amazonaws.com:9200/bus_stoptimes/_search
+
+Query:
+
+{
+	"_source" : ["trip_id", "stop_id"],
+    "query": {
+        "match_phrase": {"trip_id": "6511125-2012_05M-1205BRwd-Weekday-02"}
+    }
+}
+
+c) Find name_stop according to above stop_id in bus_stops table.
+URL:
+http://ec2-35-183-29-29.ca-central-1.compute.amazonaws.com:9200/bus_stops/_search
+
+Query:
+
+{
+	"_source" : ["name_stop", "stop_id"],
+    "query": {
+        "match_phrase": {"stop_id": "6113"}
+    }
+}
+
+Time taken : 9, 13, 10 milli seconds
+
+4)
+Condition:
+Find top 3 bus stops that are the busiest throughout the day in terms of bus routes. 
+Input: None
+Output: List of Bus Name, response time for the search query
+
+Answer:
+a) First aggregate the table bus_stoptimes according to stop_id and retrieve top 3.
+URL:
+http://ec2-35-183-29-29.ca-central-1.compute.amazonaws.com:9200/bus_stoptimes/_search
+
+Query:
+
+{
+	"size":0,
+	"aggs": {
+		"top-terms-aggregation": {
+			"terms":{
+				"field":"stop_id",
+				"size":3
+			}	
+		}
+	}
+
+}
+
+b) Find name_stops from bus_stops table according to the stop_id's.
+URL:
+http://ec2-35-183-29-29.ca-central-1.compute.amazonaws.com:9200/bus_stops/_search
+
+Query:
+
+{
+	"_source" : ["name_stop", "stop_id"],
+    "query": {
+        "match_phrase": {"stop_id": "8643"}
+    }
+}
+
+
+Times: 9, 3 milli seconds
